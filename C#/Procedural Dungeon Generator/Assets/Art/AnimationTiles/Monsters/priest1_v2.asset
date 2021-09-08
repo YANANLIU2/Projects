@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13b75c95f34a00d4e8c04f76b73312e6, type: 3}
+  m_Name: priest1_v2
+  m_EditorClassIdentifier: 
+  m_AnimatedSprites:
+  - {fileID: 21300000, guid: 7ab20ad91abd45b438414c45aa0e5204, type: 3}
+  - {fileID: 21300000, guid: bf7406f642aaef44396b788e698d341a, type: 3}
+  - {fileID: 21300000, guid: 7b99b0e46bc77f043bc46e12a262a75a, type: 3}
+  - {fileID: 21300000, guid: 7db8ee3343a19de408e5371eb4bf7484, type: 3}
+  m_MinSpeed: 4.5
+  m_MaxSpeed: 5.2
+  m_AnimationStartTime: 0
+  m_AnimationStartFrame: 0
+  m_TileColliderType: 1

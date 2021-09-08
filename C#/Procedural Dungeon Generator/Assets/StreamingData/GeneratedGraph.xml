@@ -1,0 +1,49 @@
+<root>
+  <kEntrance id="196608">
+    <neighbor id="327685" />
+  </kEntrance>
+  <kMiniBoss id="65537">
+    <neighbor id="4" />
+  </kMiniBoss>
+  <kBoss id="2">
+    <neighbor id="3" />
+  </kBoss>
+  <kGoal id="3" />
+  <kItem id="4">
+    <neighbor id="2" />
+  </kItem>
+  <kTask id="327685">
+    <neighbor id="14" />
+    <neighbor id="15" />
+  </kTask>
+  <kRest id="196614">
+    <neighbor id="65545" />
+  </kRest>
+  <kTask id="65543">
+    <neighbor id="12" />
+  </kTask>
+  <kTask id="65544">
+    <neighbor id="11" />
+  </kTask>
+  <kTask id="65545">
+    <neighbor id="65544" />
+    <neighbor id="10" />
+  </kTask>
+  <kTask id="10">
+    <neighbor id="11" />
+  </kTask>
+  <kRest id="11">
+    <neighbor id="65543" />
+  </kRest>
+  <kRest id="12">
+    <neighbor id="13" />
+  </kRest>
+  <kTask id="13">
+    <neighbor id="2" />
+    <neighbor id="65537" />
+  </kTask>
+  <kTask id="14">
+    <neighbor id="196614" />
+  </kTask>
+  <kTask id="15" />
+</root>
