@@ -6,25 +6,62 @@ using UnityEngine.Tilemaps;
 // The script is for generating a playable dungeon
 public class DungeonGenerator : MonoBehaviour
 {
+    // Defines the probability of having an entity for a room
+    [System.Serializable]
+    public struct EntityProbability
+    {
+        // The entity
+        public EntityManager.EEntityType Type;
+        // The chance
+        public float Probability;
+    }
+
+    // Defines a room's possible entities
+    [System.Serializable]
+    public class RoomData
+    {
+        [SerializeField] private Node.ENodeType m_roomType;
+        [SerializeField] private List<EntityProbability> m_entities;
+        public Node.ENodeType RoomType { get => m_roomType; set => m_roomType = value; }
+        public int GetCount() { return m_entities.Count; }
+        public EntityProbability this[int key] { get => m_entities[key]; }
+    }
+
+    [Header("Data")]
+    [Tooltip("Match room type and its corresponding entity interiors here")]
+    [SerializeField] private List<RoomData> m_roomDataList = null;
+
     [Header("Random Generation")]
     [Tooltip("Random number generator")]
     [SerializeField] XorshiftRNG m_rng = new XorshiftRNG();
+
     [Tooltip("Width of a room")]
     [SerializeField] int m_roomWidth = 6;
+
     [Tooltip("Height of a room")]
     [SerializeField] int m_roomHeight = 5;
+
     [Tooltip("Spacing between rooms")]
     [SerializeField] int m_roomSpacing = 1;
+
     [Tooltip("Height of a corridor connection")]
     [SerializeField] int m_corridorHeight = 3;
+
     [Tooltip("Width of a corridor connection")]
     [SerializeField] int m_corridorWidth = 4;
-    [Tooltip("Map tiles with types")]
-    [SerializeField] private TilesData m_tilesData = null;
 
-    [Header("Tile")]
+    [Header("Reference")]
     [Tooltip("The basic tile used for the whole dungeon")]
     [SerializeField] private TileBase m_dungeonTile = null;
+
+    [Tooltip("The tilemap for the dungeon tiles")]
+    [SerializeField] private Tilemap m_tilemap = null;
+
+    [Tooltip("To acess entity data")]
+    [SerializeField] private EntityManager m_entityManager = null;
+
+    [Tooltip("To filter out layers except entity layer")]
+    [SerializeField] private LayerMask m_entityLayerMask;
 
     // To access processed rooms
     private MapGenerator m_mapGenerator;
@@ -35,25 +72,64 @@ public class DungeonGenerator : MonoBehaviour
     // Is initialized?
     private bool m_isInit = false;
 
-    // Constants 
-    public const int kEntityLayer = 1;
-    public const int kBaseLayer = 0;
+    // To access different types of rooms' preset entities
+    private Dictionary<Node.ENodeType, RoomData> m_roomDataDict = null;
 
+    // Static 
+    public static string s_playerTag = "Player";
+
+    private readonly Vector3 m_invalidPos = new Vector3(-1, -1, -1);
+    
     private void Start()
     {
-        // Tiledata
-        m_tilesData.Initialize();
-
-        // Reference
-        m_mapGenerator = FindObjectOfType<MapGenerator>();
-        m_graphGenerator = FindObjectOfType<GraphGenerator>();
-        if (!m_mapGenerator || !m_graphGenerator) 
-        { 
-            return; 
+        // Tilemap reference check
+        if (!m_tilemap)
+        {
+#if DEBUG
+            Debug.LogError("Tilemap reference cannnot be null");
+#endif
+            return;
         }
 
-        // Initialization
+        // Entity reference check
+        if(!m_entityManager)
+        {
+#if DEBUG
+            Debug.LogError("EntityManager reference cannnot be null");
+#endif
+            return;
+        }
+
+        // Map generator reference check
+        m_mapGenerator = FindObjectOfType<MapGenerator>();
+        if (!m_mapGenerator)
+        {
+#if DEBUG
+            Debug.LogError("Map generator reference cannnot be null");
+#endif
+            return;
+        }
+
+        // Graph generator reference check
+        m_graphGenerator = FindObjectOfType<GraphGenerator>();
+        if (!m_graphGenerator)
+        {
+#if DEBUG
+            Debug.LogError("Graph generator reference cannnot be null");
+#endif
+            return;
+        }
+
+        // Rng
         m_rng.Initialize();
+
+        // Room data 
+        m_roomDataDict = new Dictionary<Node.ENodeType, RoomData>();
+        for (int i = 0; i < m_roomDataList.Count; i++)
+        {
+            var data = m_roomDataList[i];
+            m_roomDataDict.Add(data.RoomType, data);
+        }
     }
 
     private void Update()
@@ -69,9 +145,6 @@ public class DungeonGenerator : MonoBehaviour
     // Generate a dungeon
     public void Generate()
     {
-        // Reset
-        Reset();
-
         // Check
         if (!m_mapGenerator || !m_graphGenerator) 
         { 
@@ -89,12 +162,12 @@ public class DungeonGenerator : MonoBehaviour
                 {
                     // Set base tiles
                     Vector3Int tilePos = roomPos + new Vector3Int(w, h, 0);
-                    TilemapManager.Instance.SetTile(tilePos, m_dungeonTile, kBaseLayer);
+                    m_tilemap.SetTile(tilePos, m_dungeonTile);
                 }
             }
-            // Room interior
             Node node = m_graphGenerator.Graph.GetNodeById(room.Key);
-            GenerateRoomInterior(node.Type, roomPos);
+            // Room interior
+            GenerateRoomInterior(roomPos, node.Type);
         }
 
         // Draw connections
@@ -156,33 +229,9 @@ public class DungeonGenerator : MonoBehaviour
         {
             for (int w = startX; w < endX; w++)
             {
-                TilemapManager.Instance.SetTile(new Vector3Int(w, h, 0), m_dungeonTile, kBaseLayer);
+                Vector3Int tilePos = new Vector3Int(w, h, 0);
+                m_tilemap.SetTile(tilePos, m_dungeonTile);
             }
-        }
-    }
-
-    private void CreateATeleport(Vector3Int fromRoomPos, Vector3Int toRoomPos)
-    {
-        // From pos => to pos
-        Vector3Int spawnPos = GetAnEmptyPos(fromRoomPos, 1);
-        Vector3Int telePos = GetAnEmptyPos(toRoomPos, 1);
-
-        // Set the tile
-        CreateEntity(TilesData.ETileType.kTeleport, spawnPos);
-        CreateEntity(TilesData.ETileType.kTeleport, telePos);
-        CreateEntity(TilesData.ETileType.kTeleportArrow, spawnPos + new Vector3Int(0, 1, 0));
-
-        // Get Instantiated object from the tile map
-        GameObject fromObj = TilemapManager.Instance.GetTileGameObject(spawnPos, 1);
-        GameObject toObj = TilemapManager.Instance.GetTileGameObject(telePos, 1);
-
-        // Set position
-        if (fromObj && toObj)
-        {
-            Teleport fromTeleport = fromObj.GetComponent<Teleport>();
-            Teleport toTeleport = toObj.GetComponent<Teleport>();
-            fromTeleport.Target = toTeleport;
-            toTeleport.Target = fromTeleport;
         }
     }
 
@@ -192,32 +241,86 @@ public class DungeonGenerator : MonoBehaviour
         return gridPos * new Vector3Int(m_roomWidth + m_roomSpacing, m_roomHeight + m_roomSpacing, 0);
     }
 
-    // Get an empty position in a room
-    private Vector3Int GetAnEmptyPos(Vector3Int roomPos, int orderInLayer)
+    // Generate entities in a room
+    private void GenerateRoomInterior(Vector3Int roomPos, Node.ENodeType type)
     {
-        int w = roomPos.x + m_rng.GetRange(1, m_roomWidth - 2);
-        int h = roomPos.y + m_rng.GetRange(1, m_roomHeight - 2);
-        Vector3Int pos = new Vector3Int(w, h, 0);
-        if (TilemapManager.Instance.IsTileEmpty(pos, orderInLayer))
+        // Get data
+        var data = m_roomDataDict[type];
+        // Generate each entity
+        for (int i = 0; i < data.GetCount(); i++)
         {
-            return pos;
+            var entity = data[i];
+            // If the entity's probability is higher than the random norm value => create the entity
+            if(entity.Probability >= m_rng.GetNorm())
+            {
+                // Get a possible pos
+                Vector3 pos = GetRandPosInRoom(roomPos);
+                
+                // If the pos is valid we generate the entity. Otherwise, skip it => in case the room is full 
+                if(pos != m_invalidPos)
+                {
+                    GameObject obj = m_entityManager.CreateEntity(pos, entity.Type);
+                }
+            }
         }
-        return GetAnEmptyPos(roomPos, orderInLayer);
     }
 
-    // Reset
+    // Get a random position in a room
+    // If max reroll times < 0 => unlimited reroll times
+    private Vector3 GetRandPosInRoom(Vector3Int pos, int maxReroll = 3, int reroll = 0)
+    {
+        // A random pos in the room
+        Vector3 randPos = pos + new Vector3(m_rng.GetRange(1, m_roomWidth - 2), m_rng.GetRange(1, m_roomHeight - 2), 0);
+
+        // Overlap point
+        Collider2D collider = Physics2D.OverlapPoint(randPos, m_entityLayerMask);
+
+        // If the position is occupied 
+        if(collider != null)
+        {
+            // If reroll times is limited
+            if(maxReroll > 0)
+            {
+                reroll++;
+                // Compare 
+                if (reroll >= maxReroll)
+                {
+                    return m_invalidPos;
+                }
+            }
+            // Else reroll
+            return GetRandPosInRoom(pos, maxReroll, reroll);
+        }
+        else
+        {
+            return randPos;
+        }
+    }
+
     private void Reset()
     {
-        TilemapManager.Instance.Reset();
+        // A fast way of generating the room data list
+        for (int i = 0; i < (int)Node.ENodeType.kNum; i++)
+        {
+            Node.ENodeType type = (Node.ENodeType)i;
+            RoomData data = new RoomData();
+            data.RoomType = type;
+            m_roomDataList.Add(data);
+        }
     }
 
-    private void CreateEntity(TilesData.ETileType type, Vector3Int pos)
+    private void CreateATeleport(Vector3Int fromRoomPos, Vector3Int toRoomPos)
     {
-        TilemapManager.Instance.SetTile(pos, m_tilesData.GetTile(type), kEntityLayer);
-    }
-    
-    private void GenerateRoomInterior(Node.ENodeType roomType, Vector3Int pos)
-    {
-        CreateEntity(TilesData.ETileType.kCoin, pos + new Vector3Int(1, 1, 0));
+        // Get positions for entities
+        Vector3 fromPos = GetRandPosInRoom(fromRoomPos, -1);
+        Vector3 toPos = GetRandPosInRoom(toRoomPos, -1);
+        // Instantiate entities
+        GameObject entrance = m_entityManager.CreateEntity(fromPos, EntityManager.EEntityType.kTeleportEntrance);
+        GameObject exit = m_entityManager.CreateEntity(toPos, EntityManager.EEntityType.kTeleportExit);
+        // Set the pair
+        Teleport entranceTeleport = entrance.GetComponent<Teleport>();
+        Teleport exitTeleport = exit.GetComponent<Teleport>();
+        entranceTeleport.Destination = exitTeleport;
+        exitTeleport.Destination = entranceTeleport;
     }
 }

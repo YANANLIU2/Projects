@@ -1,36 +1,39 @@
-﻿using System.Collections; 
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Reference: Solved the bug of teleporting back and forth: https://forum.unity.com/threads/teleporting-back-and-forth.44197/
+// Bug: Teleporting Back and forth
+// Solution: https://forum.unity.com/threads/teleporting-back-and-forth.44197/
+
 public class Teleport : Entity
 {
-    static Vector3 s_tileCenter = new Vector3(0.5f, 0.5f, 0);
+    // Is the teleport working now?
+    private bool m_isActive = true;
 
-    private Teleport m_target = null;
-    private bool m_isActive = true; 
+    // The place the player will be teleported to
+    private Teleport m_destination = null;
+    
+    // Getters & Setters
+    public Teleport Destination { set => m_destination = value; }
 
-    public Teleport Target
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        set => m_target = value;
-        get => m_target;
+        if (IsPlayer(collision))
+        {
+            if (m_isActive)
+            {
+                m_destination.m_isActive = false;
+                collision.gameObject.transform.position = m_destination.gameObject.transform.position;
+            }
+        }
+
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (!m_isActive)
+        if (IsPlayer(collision))
         {
             m_isActive = true;
-        }
-    }
-
-    protected override void Interact(PlayerController player)
-    {
-        if (m_isActive == true)
-        {
-            Target.m_isActive = false;
-            // Teleporter collider
-            player.transform.position = m_target.transform.position + s_tileCenter;
         }
     }
 }
