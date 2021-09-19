@@ -202,13 +202,21 @@ public class PlayerController : MonoBehaviour
     // Update: movement
     private void Update()
     {
+        // Quit?
+        if(Input.GetKey(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+
         // Alive?
         if(!m_isAlive || m_isWin)
         {
             return;
         }
+
         // Move
         Movement();
+
         // Timers
         if(m_shieldTimer.IsActive)
         {
@@ -289,9 +297,6 @@ public class PlayerController : MonoBehaviour
         MaxExp = levelData.MaxExp;
         MaxHp += levelData.BonusMaxHp;
         m_gameUIManager.SetTextUI(GameUIManager.EType.kLevel, m_level);
-
-        // Refill hp
-        Hp = m_maxHp;
     }
 
     // Move horizontally && vertically

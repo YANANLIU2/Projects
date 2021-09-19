@@ -88,10 +88,10 @@ public class GameUIManager : MonoBehaviour
             // Update max value text
             bar.MaxValueText.text = maxValue.ToString();
             // Update bar
-            float ratio = maxValue != 0 ? value / (float)maxValue : 0;
-            if(ratio > 0)
+            if(maxValue != 0)
             {
-                bar.Bar.transform.localScale = new Vector3(ratio, 1, 1);
+                float ratio = value / (float)maxValue;
+                bar.Bar.transform.localScale = ratio > 0 ? new Vector3(ratio, 1, 1) : new Vector3(0, 1, 1);
             }
         }
     }
