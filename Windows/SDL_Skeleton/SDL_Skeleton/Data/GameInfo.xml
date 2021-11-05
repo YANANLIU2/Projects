@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--max floors: four-->
+<root>
+  <gamestate>
+    <menustate>
+      <background>Assets/Background/EnterCover.jpg</background>
+    </menustate>
+
+    <creditstate>
+      <background>Assets/Background/CreditCover.jpg</background>
+    </creditstate>
+
+    <playstate>
+    </playstate>
+
+    <endstate>
+    </endstate>
+
+    <konamistate>
+      <background>Assets/Background/KonamiCover.jpg</background>
+    </konamistate>
+  </gamestate>
+  
+  <ui>
+    <button>
+      <blueMedium>
+        <selected>Assets/Button/Button1Selected.png</selected>
+        <unselected>Assets/Button/Button1Unselected.png</unselected>
+        <width>270</width>
+        <height>98</height>
+      </blueMedium>
+    </button>
+    
+    <font>
+      <trueLies>Assets/Font/True Lies/True Lies.ttf</trueLies>
+      <d_day_stencil>Assets/Font/d_day_stencil/D Day Stencil.ttf</d_day_stencil>
+      <port_credit>Assets/Font/port_credit/portcreb.ttf</port_credit>
+    </font>
+    
+  </ui>
+
+  <!--GameObjects: Buttons-->
+  <newGamebutton>
+    <text>New Game</text>
+    <id>10001</id>
+    <toState>Credits</toState>
+  </newGamebutton>
+
+  <loadbutton>
+    <text>Load</text>
+    <id>10002</id>
+    <toState>Credits</toState>
+  </loadbutton>
+
+  <creditbutton>
+    <text>Credit</text>
+    <id>10003</id>
+    <toState>Credits</toState>
+  </creditbutton>
+
+  <exitbutton>
+    <text>Exit</text>
+    <id>10004</id>
+    <toState>Credits</toState>
+  </exitbutton>
+  
+  <!--GameObjects: Character-->
+  <character>
+    <player>
+      <id>20001</id>
+      <health>10</health>
+      <position>
+        <x>0</x>
+        <y>0</y>
+      </position>
+    </player>
+  </character>
+  
+</root>
