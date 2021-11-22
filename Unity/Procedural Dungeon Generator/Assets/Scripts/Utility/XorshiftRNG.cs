@@ -83,8 +83,6 @@ public class XorshiftRNG
 #endif
         int randomValue = GetInt();
         return randomValue % (high + 1 - low) + low;
-
-
     }
 
     // Get a random number between low value and high value (both inclusive) as uint 
