@@ -35,6 +35,9 @@ public class AgentInfoPanel : MonoBehaviour
     [Tooltip("An agent's tag")]
     [SerializeField] private string agent_tag_ = "Agent";
 
+    [Tooltip("The name of the text part in a slider")]
+    [SerializeField] private string label_percent_name_ = "Label Percent";
+
     // Update
     private void Update()
     {
@@ -54,7 +57,6 @@ public class AgentInfoPanel : MonoBehaviour
     public void ChangeHunger() { agent_.Hunger.Value = hunger_.value * 0.01f; }
     public void ChangeThirst() { agent_.Thirst.Value = thirst_.value * 0.01f; }
     public void ChangeBladder() { agent_.Bladder.Value = bladder_.value * 0.01f; }
-
 
     // Select an agent
     private void Select(Agent agent)
@@ -93,10 +95,19 @@ public class AgentInfoPanel : MonoBehaviour
             return;
         }
         hunger_.value = agent_.Hunger.Value * 100;
+        hunger_.transform.Find(label_percent_name_).GetComponent<Text>().text = ((int)hunger_.value).ToString();
+
         energy_.value = agent_.Energy.Value * 100;
+        energy_.transform.Find(label_percent_name_).GetComponent<Text>().text = ((int)energy_.value).ToString();
+
         bladder_.value = agent_.Bladder.Value * 100;
+        bladder_.transform.Find(label_percent_name_).GetComponent<Text>().text = ((int)bladder_.value).ToString();
+
         thirst_.value = agent_.Thirst.Value * 100;
+        thirst_.transform.Find(label_percent_name_).GetComponent<Text>().text = ((int)thirst_.value).ToString();
+
         Action action = agent_.CurrentAction;
+
         if (action != null)
         {
             string action_info = string.Format("Action: {0} \nTarget: {1}", action.Name, action.Target);

@@ -944,6 +944,7 @@ MonoBehaviour:
   panel_: {fileID: 8968830293039271401}
   selection_: {fileID: 53807317}
   agent_tag_: Agent
+  label_percent_name_: Label Percent
 --- !u!1001 &1437019387
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1342,6 +1343,22 @@ PrefabInstance:
     - target: {fileID: 109129235674102003, guid: 6d0632a6a74a8f845a27181936bd3381, type: 3}
       propertyPath: m_Name
       value: Agent
+      objectReference: {fileID: 0}
+    - target: {fileID: 109129235858508995, guid: 6d0632a6a74a8f845a27181936bd3381, type: 3}
+      propertyPath: energy_.value_
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 109129235858508995, guid: 6d0632a6a74a8f845a27181936bd3381, type: 3}
+      propertyPath: hunger_.value_
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 109129235858508995, guid: 6d0632a6a74a8f845a27181936bd3381, type: 3}
+      propertyPath: thrist_.value_
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 109129235858508995, guid: 6d0632a6a74a8f845a27181936bd3381, type: 3}
+      propertyPath: bladder_.value_
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 109129235674101961, guid: 6d0632a6a74a8f845a27181936bd3381, type: 3}

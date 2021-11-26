@@ -173,7 +173,7 @@ public class Agent : MonoBehaviour
     ActionPair PickBestChoice(List<ActionPair> action_pairs_array)
     {
         // Pick a random one from the top 3
-        int max = Mathf.Max(action_pairs_array.Count, top_choices_num);
+        int max = Mathf.Min(action_pairs_array.Count, top_choices_num);
         int index = rng_.GetRange(0, max - 1);
         return action_pairs_array[index];
     }
