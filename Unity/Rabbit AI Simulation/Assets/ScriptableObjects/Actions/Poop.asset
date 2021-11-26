@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e95118c3a69fbed49b1e5e65adf1be06, type: 3}
+  m_Name: Poop
+  m_EditorClassIdentifier: 
+  name_: Poop
+  duration_: 1
+  begin_behaviors_sequence_:
+  - type_: 0
+    raw_value_: Idle
+  process_behaviors_sequence_:
+  - type_: 4
+    raw_value_: 0.5
+  decision_factors_array_:
+  - {fileID: 11400000, guid: 314d1d04682245a4686fcae98be92a98, type: 2}
