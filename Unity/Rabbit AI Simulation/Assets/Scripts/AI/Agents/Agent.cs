@@ -13,7 +13,7 @@ public class Agent : MonoBehaviour
     [Header("Statistics")]
     [SerializeField] private Stat hunger_;
     [SerializeField] private Stat age_;
-    [SerializeField] private Stat thrist_;
+    [SerializeField] private Stat thirst_;
     [SerializeField] private Stat bladder_;
     [SerializeField] private Stat energy_;
     [SerializeField] private float walk_radius_ = 3;
@@ -55,7 +55,7 @@ public class Agent : MonoBehaviour
     public NavMeshAgent NavMeshAgent { get => navigation_; }
     public Stat Hunger { get => hunger_; }
     public Stat Age { get => age_; }
-    public Stat Thirst { get => thrist_; }
+    public Stat Thirst { get => thirst_; }
     public Stat Bladder { get => bladder_; }
     public Stat Energy { get => energy_; }
     public Action CurrentAction { get => current_action_; }
@@ -102,7 +102,7 @@ public class Agent : MonoBehaviour
 #endif
         }
 
-        stats_array_ = new List<Stat>() { age_, hunger_, thrist_, bladder_, energy_ };
+        stats_array_ = new List<Stat>() { age_, hunger_, thirst_, bladder_, energy_ };
         context_ = new Context(this);
         rng_.Initialize();
         PlayAnim(running_anim_name_);
