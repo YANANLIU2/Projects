@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\Application\Application.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Application\Main.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ObjectSystem\GameObject.cpp">
+      <Filter>ObjectSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ObjectSystem\ObjectManager.cpp">
+      <Filter>ObjectSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Timing\HighPrecisionTimer.cpp">
+      <Filter>Utils\Timing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Utils\Random.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Utils\Vector.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\World\Tile.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\World\TileFactory.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\World\TileRenderer.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\World\World.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\Application\Application.h">
+      <Filter>Application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ObjectSystem\GameObject.h">
+      <Filter>ObjectSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ObjectSystem\ObjectManager.h">
+      <Filter>ObjectSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ObjectSystem\ObjectSystemTypes.h">
+      <Filter>ObjectSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Timing\HighPrecisionTimer.h">
+      <Filter>Utils\Timing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Timing\SimpleInstrumentationProfiler.h">
+      <Filter>Utils\Timing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\Random.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\Macros.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\Vector.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\World\Tile.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\World\TileFactory.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\World\TileRenderer.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\World\TileTypes.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\World\World.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\World\PathPlan.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Application\Constants.h">
+      <Filter>Application</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Application">
+      <UniqueIdentifier>{0126c51b-2443-4399-8c8d-605d31ec3b1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ObjectSystem">
+      <UniqueIdentifier>{6a26c089-c5a6-4f43-a1cc-14bd13d1c170}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{28f9b831-d90c-480b-89d6-404be87822cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World">
+      <UniqueIdentifier>{60ab5f32-61ec-4782-8b33-f23c6e556e2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils\Timing">
+      <UniqueIdentifier>{f0701b5e-18f0-4ff4-a8b3-1764f84090a0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
