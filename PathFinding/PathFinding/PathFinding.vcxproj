@@ -172,7 +172,7 @@
     <ClCompile Include="..\src\Application\Main.cpp" />
     <ClCompile Include="..\src\ObjectSystem\GameObject.cpp" />
     <ClCompile Include="..\src\ObjectSystem\ObjectManager.cpp" />
-    <ClCompile Include="..\src\Timing\HighPrecisionTimer.cpp" />
+    <ClCompile Include="..\src\Timer\HighPrecisionTimer.cpp" />
     <ClCompile Include="..\src\Utils\Random.cpp" />
     <ClCompile Include="..\src\Utils\Vector.cpp" />
     <ClCompile Include="..\src\World\Tile.cpp" />
@@ -186,8 +186,8 @@
     <ClInclude Include="..\src\ObjectSystem\GameObject.h" />
     <ClInclude Include="..\src\ObjectSystem\ObjectManager.h" />
     <ClInclude Include="..\src\ObjectSystem\ObjectSystemTypes.h" />
-    <ClInclude Include="..\src\Timing\HighPrecisionTimer.h" />
-    <ClInclude Include="..\src\Timing\SimpleInstrumentationProfiler.h" />
+    <ClInclude Include="..\src\Timer\HighPrecisionTimer.h" />
+    <ClInclude Include="..\src\Timer\SimpleInstrumentationProfiler.h" />
     <ClInclude Include="..\src\Utils\Macros.h" />
     <ClInclude Include="..\src\Utils\Random.h" />
     <ClInclude Include="..\src\Utils\Vector.h" />

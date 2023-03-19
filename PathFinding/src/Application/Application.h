@@ -1,7 +1,7 @@
 // Application.h
 #pragma once
 
-#include "../Timing/HighPrecisionTimer.h"
+#include "../Timer/HighPrecisionTimer.h"
 
 struct SDL_Window;
 struct SDL_Renderer;

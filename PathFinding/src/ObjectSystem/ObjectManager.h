@@ -4,7 +4,7 @@
 #include "ObjectSystemTypes.h"
 #include "../Application/Constants.h"
 #include "../ObjectSystem/GameObject.h"
-#include "../Timing/HighPrecisionTimer.h" // timer
+#include "../Timer/HighPrecisionTimer.h"
 
 class World;
 struct SDL_Renderer;
