@@ -26,12 +26,6 @@ private:
 	// Goal tiles 
 	std::vector<int> m_pGoals;
 
-    // The current goal for path finding
-    Tile* m_pCurrentGoal;
-
-    // A max-heap priority queue to store nodes: store here to split the work for multiple frames
-    OpenSet openSet;
-
 public:
     // Constructor
     World();
@@ -59,7 +53,10 @@ private:
 public:
     int GetRandWalkableTile() const;
     int GetTileIndexFromWorldPos(float x, float y) const;
+    bool GetGridPosFromWorldPos(float x, float y, int& outX, int& outY);
+    Tile* GetTileFromGridPos(int x, int y);
     inline Tile* GetTile(int index) { return m_pTiles[index]; }
     inline const int GetIndexFromGridPos(int x, int y) const { return (y * kWorldWidth) + x; }
+    inline bool IsTileIndexValid(int index) const { return index >= 0 && index < kNumTiles; }
 };
 

@@ -21,7 +21,6 @@ class Application
     SDL_Window* m_pWindow;
     SDL_Renderer* m_pRenderer;
 
-    // frame count stuff
     HighPrecisionTimer m_frameTimer;
     double m_deltaTime;
 
@@ -45,6 +44,6 @@ public:
     void MainLoop();
 
 private:
-    // Polls for and process events. Returns true for exiting.
+    // Poll and process events. Return true for exiting.
     bool ProcessEvents();  
 };

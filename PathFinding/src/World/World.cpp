@@ -21,7 +21,6 @@
 // Constructor.
 //---------------------------------------------------------------------------------------------------------------------
 World::World()
-    : openSet([](Tile* pLeft, Tile* pRight) {return pLeft->GetCost() > pRight->GetCost(); })
 {
     memset(m_pTiles, 0, sizeof(Tile*) * kNumTiles);
 }
@@ -131,22 +130,31 @@ void World::Render(SDL_Renderer* pRenderer)
 //---------------------------------------------------------------------------------------------------------------------
 void World::GeneratePathToBestTarget(const Vec2 startPos, Plan& path)
 {
-    // If open set is empty, then the last game object has been processed. Set the goal for the new game object
-    if (openSet.empty())
-    {
-        // Calculate the goal
-        int startIndex = GetTileIndexFromWorldPos(startPos.x, startPos.y);
-        m_pCurrentGoal = m_pTiles[GetARandGoalTile(RoundToNearest(startPos.x / Tile::kTileWidth), RoundToNearest(startPos.y / Tile::kTileHeight))];
+    // A max-heap priority queue to store nodes
+    typedef std::priority_queue<Tile*, std::vector<Tile*>, std::function< bool(Tile*, Tile*) >> OpenSet;
+    auto comp = [](Tile* pLeft, Tile* pRight) {return pLeft->GetCost() > pRight->GetCost(); };
+    OpenSet openSet(comp);
 
-        // Create the start node and add it to the planningNodes
-        Tile* pStartTile = m_pTiles[startIndex];
-        if (pStartTile)
-        {
-            ResetTiles();
-            // Add the start vertex
-            openSet.push(pStartTile);
-            pStartTile->SetCost(0);
-        }
+    // Calculate the goal
+    int startTileX, startTileY = 0;
+    Tile* pCurrentGoal = nullptr;
+    if (GetGridPosFromWorldPos(startPos.x, startPos.y, startTileX, startTileY))
+    {
+        pCurrentGoal = m_pTiles[GetARandGoalTile(startTileX, startTileY)];
+    }
+    if (!pCurrentGoal)
+    {
+        return;
+    }
+
+    // Get Tile
+    Tile* pStartTile = GetTileFromGridPos(startTileX, startTileY);
+    if (pStartTile)
+    {
+        ResetTiles();
+        // Add the start vertex
+        openSet.push(pStartTile);
+        pStartTile->SetCost(0);
     }
 
     Tile* pNode = nullptr;
@@ -155,7 +163,7 @@ void World::GeneratePathToBestTarget(const Vec2 startPos, Plan& path)
     {
         // Grab the top of the open set: the highest priority tile
         pNode = openSet.top();
-        if (pNode == m_pCurrentGoal) // If the node is goal, end the loop
+        if (pNode == pCurrentGoal) // If the node is goal, end the loop
         {
             break;
         }
@@ -221,15 +229,15 @@ void World::GeneratePathToBestTarget(const Vec2 startPos, Plan& path)
     }
 
     // Build the path to the chosen goal if we find the goal 
-    if (pNode == m_pCurrentGoal)
+    if (pNode == pCurrentGoal)
     {
         if (!openSet.empty())
         {
-            while (m_pCurrentGoal)
+            while (pCurrentGoal)
             {
-                Vec2 positionPair = m_pTiles[m_pCurrentGoal->GetTile()]->GetCenter();
+                Vec2 positionPair = m_pTiles[pCurrentGoal->GetTile()]->GetCenter();
                 path.push_back(positionPair);
-                m_pCurrentGoal = m_pCurrentGoal->GetPrev();
+                pCurrentGoal = pCurrentGoal->GetPrev();
             }
         }
     }
@@ -348,4 +356,17 @@ int World::GetTileIndexFromWorldPos(float x, float y) const
 	int gridY = RoundToNearest(y / Tile::kTileHeight);
 	int gridX = RoundToNearest(x / Tile::kTileWidth);
 	return GetIndexFromGridPos(gridX, gridY);
+}
+
+bool World::GetGridPosFromWorldPos(float x, float y, int& outX, int& outY)
+{
+    outY = RoundToNearest(y / Tile::kTileHeight);
+    outX = RoundToNearest(x / Tile::kTileWidth);
+    return outX >= 0 && outY >= 0 && outX < kWorldWidth && outY < kWorldHeight;
+}
+
+Tile* World::GetTileFromGridPos(int x, int y)
+{
+    int index = GetIndexFromGridPos(x, y);
+    return IsTileIndexValid(index) ? m_pTiles[index] : nullptr;
 }
