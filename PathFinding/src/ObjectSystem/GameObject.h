@@ -1,6 +1,8 @@
 // GameObject.h
 #pragma once
 
+#include <mutex>
+
 #include "SDL_rect.h"
 #include "../World/PathPlan.h"
 #include "../Utils/Vector.h"
@@ -24,7 +26,7 @@ public:
 	Vec2 m_position;
 	Plan m_path;
 	State m_state;
-
+	mutable std::mutex mutex;
 	unsigned char m_red, m_green, m_blue;
 
 public:
@@ -46,7 +48,7 @@ public:
 	void SetPath(Plan& path);
 	void SetState(State newState) { m_state = newState; }
 	SDL_Rect GetRect() const;
-	inline const Vec2 GetPos() const { return m_position; }
+	const Vec2 GetPos() const;
 	inline State GetState() const { return m_state; }
 
 private:

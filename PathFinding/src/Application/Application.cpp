@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sstream>
+#include <thread>
 
 //---------------------------------------------------------------------------------------------------------------------
 // Destructor.
@@ -73,6 +74,9 @@ bool Application::Init()
 //---------------------------------------------------------------------------------------------------------------------
 void Application::MainLoop()
 {
+    // Create a thread for updating
+    std::thread updateThread(&Application::Update, this);
+    
     while (true)
     {
         m_frameTimer.StartTimer();
@@ -83,31 +87,44 @@ void Application::MainLoop()
             break;
         }
 
-        // Update the agents
-        m_pObjectMgr->UpdateGameObjects(float(m_deltaTime));
+        Render();
 
-        // Clear the screen.
-        SDL_SetRenderDrawColor(m_pRenderer, 0xff, 0xff, 0xff, 0x00);
-        SDL_RenderClear(m_pRenderer);
-
-        // Render the world
-        m_pWorld->Render(m_pRenderer);
-
-        // Render the agents
-        m_pObjectMgr->DrawGameObjects(m_pRenderer);
-
-        // Present the renderer
-        SDL_RenderPresent(m_pRenderer);
-
+        // Wait last frame's update finish and start this frame's update
+        updateThread.join();
+        updateThread = std::thread(&Application::Update, this);
+        
         m_deltaTime = m_frameTimer.GetTimer();
 
-#ifdef _DEBUG // For breakpoints
+#ifdef _DEBUG // Force a reasonable deltaTime for debugging
         if (m_deltaTime >= 500.0)
         {
             m_deltaTime = 16.67;
         }
 #endif
     }
+    updateThread.join();
+}
+
+void Application::Render()
+{
+    // Clear the screen.
+    SDL_SetRenderDrawColor(m_pRenderer, 0xff, 0xff, 0xff, 0x00);
+    SDL_RenderClear(m_pRenderer);
+
+    // Render the world
+    m_pWorld->Render(m_pRenderer);
+
+    // Render the agents
+    m_pObjectMgr->DrawGameObjects(m_pRenderer);
+
+    // Present the renderer
+    SDL_RenderPresent(m_pRenderer);
+}
+
+void Application::Update()
+{
+    // Update the agents
+    m_pObjectMgr->UpdateGameObjects(float(m_deltaTime));
 }
 
 //---------------------------------------------------------------------------------------------------------------------

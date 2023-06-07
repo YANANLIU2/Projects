@@ -37,12 +37,12 @@ public:
 
     // Destructor
     ~Application();
-
     // Init the world
     bool Init();
-
     void MainLoop();
-
+    void Render();
+    void Update();
+    
 private:
     // Poll and process events. Return true for exiting.
     bool ProcessEvents();  

@@ -1,4 +1,3 @@
-
 // GameObject.cpp
 #include "GameObject.h"
 #include "../Utils/Macros.h"
@@ -15,6 +14,7 @@
 //---------------------------------------------------------------------------------------------------------------------
 void GameObject::Update(float deltaTimeMs)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     if (m_state == State::kFollowingPath)
     {
         StepMovement(deltaTimeMs);
@@ -39,6 +39,12 @@ SDL_Rect GameObject::GetRect() const
     rect.w = kWidth;
     rect.h = kHeight;
     return rect;
+}
+
+const Vec2 GameObject::GetPos() const
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    return m_position;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
