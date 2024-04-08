@@ -57,7 +57,8 @@ teleportation_y: .word 11 # the teleportation door in the middle of the map. The
 # player data
 player_pos_x: .word 11
 player_pos_y: .word 18
-player_cur_direction: .byte 0
+player_direction_x: .word 0
+player_direction_y: .word 0
 
 # input 
 receiver_control_reg: .word 0xffff0000 # indicates if there's a key pressed
@@ -82,7 +83,7 @@ Lmain_loop_begin:
     jal update_input 
     beq $v0, $zero, Lmain_loop_end
     
-Lmain_loop_logic:
+    jal update_player_movement
     jal draw_player
     # Pause execution for 100 milliseconds to control game speed/ reduce cpu usage/ synchronize game logic
     li $v0, 32
@@ -99,18 +100,11 @@ Lmain_loop_end:
 #################### handles input #########################
 # return 0 to quit the game
 update_input:
-    # intro 
-    subi $sp, $sp, 24
-    sw $ra, 20($sp)
-    
-    # return 1 by default
-    li $v0, 1
-    
     # check for input 
     lw $a0, receiver_control_reg # load reg addr
     lw $a0, 0($a0) # load value from reg_addr
     andi $a0, $a0, 0x0001 # get is_pressed by getting the least significant value from receiver_control_reg
-    beq $a0, $zero, Linput_end
+    beq $a0, $zero, Lhandle_input_return_one
     
     # process input
     lw $a0, receiver_data_reg
@@ -121,49 +115,57 @@ update_input:
     beq $a0, 'w', Lpressed_up
     beq $a0, 's', Lpressed_down
     beq $a0, 'q', Lpressed_q
-    b Linput_end
+    b Lhandle_input_return_one
     
 Lpressed_right:
     li $a0, 1
+    sw $a0, player_direction_x
     li $a1, 0
-    jal update_player_movement
-    b Linput_end
+    sw $a1, player_direction_y
+    b Lhandle_input_return_one
     
 Lpressed_left:
     li $a0, -1
+    sw $a0, player_direction_x
     li $a1, 0
-    jal update_player_movement
-    b Linput_end
+    sw $a1, player_direction_y
+    b Lhandle_input_return_one
     
 Lpressed_up:
     li $a0, 0
+    sw $a0, player_direction_x
     li $a1, -1
-    jal update_player_movement
-    b Linput_end
+    sw $a1, player_direction_y
+    b Lhandle_input_return_one
     
 Lpressed_down:
     li $a0, 0
+    sw $a0, player_direction_x
     li $a1, 1
-    jal update_player_movement
-    b Linput_end
+    sw $a1, player_direction_y
+    b Lhandle_input_return_one
 
 Lpressed_q:
     li $v0, 0 # means to quit the game
-    b Linput_end
-    
-Linput_end:
-    # outro
-    lw $ra, 20($sp)
-    addi $sp, $sp, 24
     jr $ra
 
-################ update player movement ###############################
-# a0: delta x
-# a1: delta y        
+Lhandle_input_return_one:
+    li $v0, 1  # return 1 by default
+    jr $ra
+
+################ update player movement ###############################     
 update_player_movement:
     # intro 
     subi $sp, $sp, 24
     sw $ra, 20($sp)
+    
+    # load player direction
+    lw $a0, player_direction_x
+    lw $a1, player_direction_y     
+    
+    # return if player direction is (0,0)
+    or $t0, $a0, $a1
+    beq $t0, $zero, Lend_update_player_movement
     
     # desired pos
     lw $t0, player_pos_x
