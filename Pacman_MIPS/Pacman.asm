@@ -52,10 +52,12 @@ color_blue: .word 0x000000FF
 color_gray: .word 0x00EEEEEE
 color_yellow: .word 0x00FFFF00
 color_black: .word 0x00000000
+teleportation_y: .word 11 # the teleportation door in the middle of the map. The player can use it to travel from one end to another end. 
 
 # player data
 player_pos_x: .word 11
 player_pos_y: .word 18
+player_cur_direction: .byte 0
 
 # input 
 receiver_control_reg: .word 0xffff0000 # indicates if there's a key pressed
@@ -114,10 +116,6 @@ update_input:
     lw $a0, receiver_data_reg
     lw $a0, 0($a0) # the pressed key's ascii value in a0
     
-    # load player pos
-    lw $t0, player_pos_x
-    lw $t1, player_pos_y
-    
     beq $a0, 'd', Lpressed_right
     beq $a0, 'a', Lpressed_left
     beq $a0, 'w', Lpressed_up
@@ -126,45 +124,105 @@ update_input:
     b Linput_end
     
 Lpressed_right:
-    addi $t2, $t0, 1
-    sw $t2, player_pos_x
-    b Lupdate_player_pos
+    li $a0, 1
+    li $a1, 0
+    jal update_player_movement
+    b Linput_end
     
 Lpressed_left:
-    subi $t2, $t0, 1
-    sw $t2, player_pos_x
-    b Lupdate_player_pos
+    li $a0, -1
+    li $a1, 0
+    jal update_player_movement
+    b Linput_end
     
 Lpressed_up:
-    subi $t3, $t1, 1
-    sw $t3, player_pos_y
-    b Lupdate_player_pos
+    li $a0, 0
+    li $a1, -1
+    jal update_player_movement
+    b Linput_end
     
 Lpressed_down:
-    addi $t3, $t1, 1
-    sw $t3, player_pos_y
-    b Lupdate_player_pos
+    li $a0, 0
+    li $a1, 1
+    jal update_player_movement
+    b Linput_end
 
 Lpressed_q:
     li $v0, 0 # means to quit the game
     b Linput_end
-    
-Lupdate_player_pos:
-    # overwrite the previous player position with a black square
-    move $a0, $t0
-    move $a1, $t1
-    jal draw_a_black_square
     
 Linput_end:
     # outro
     lw $ra, 20($sp)
     addi $sp, $sp, 24
     jr $ra
-    
-update_player_movement:
 
-    jr $ra
+################ update player movement ###############################
+# a0: delta x
+# a1: delta y        
+update_player_movement:
+    # intro 
+    subi $sp, $sp, 24
+    sw $ra, 20($sp)
     
+    # desired pos
+    lw $t0, player_pos_x
+    add $t2, $t0, $a0  # t2: new_x
+    lw $t1, player_pos_y
+    add $t3, $t1, $a1  # t3: new_y
+    
+    # check collision
+    # step1: calc the corresponding index on the map of the new player pos: index = new_y * map_width + new_x
+    lw $t6, pac_man_map_width
+    mul $t4, $t3, $t6
+    add $t4, $t4, $t2
+    
+    # step2: read the symbol on map at new player pos
+    la $t5, pac_man_map
+    add $t5, $t5, $t4 # addr + index
+    lb $t5, ($t5)
+    
+    # check for special wall scenario. - teleportation
+    beq $t5, 1, Lcheck_for_tunnel
+
+Lsave_player_new_pos:
+    # save
+    sw $t2, player_pos_x
+    sw $t3, player_pos_y
+    
+    # overwrite the previous player position with a black square
+    move $a0, $t0
+    move $a1, $t1
+    jal draw_a_black_square
+    
+Lend_update_player_movement:
+     # outro
+    lw $ra, 20($sp)
+    addi $sp, $sp, 24
+    jr $ra
+
+Lcheck_for_tunnel:
+    # check if new_y matches teleportation_y. if not => do not update player's pos cuz we hit a wall
+    lw $t7, teleportation_y
+    bne $t7, $t3, Lend_update_player_movement
+    
+    # check if new_x is -1. If not => check if new_x is map_width
+    seq $v0, $t2, -1
+    bne $v0, 1, Lcheck_tele_player_to_leftest
+    
+    # tele player to the rightest tile
+    subi $t2, $t6, 1
+    b Lsave_player_new_pos
+    
+Lcheck_tele_player_to_leftest:
+    # check if new_x is map_width. if not => do not update player's pos cuz we hit a wall
+    seq $v0, $t2, $t6 
+    bne $v0, 1, Lend_update_player_movement
+    
+    # tele player to the leftest tile
+    li $t2, 0
+    b Lsave_player_new_pos
+   
 ################# drarw a 1*1 black square at the designated pos ##################
 # a0: x
 # a1: y
