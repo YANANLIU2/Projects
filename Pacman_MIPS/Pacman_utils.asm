@@ -8,9 +8,11 @@ color_blue: .word 0x000000FF
 color_gray: .word 0x00EEEEEE
 color_yellow: .word 0x00FFFF00
 color_black: .word 0x00000000
-
+color_red: .word 0x00FF0000
+color_pink: .word 0x00FFC0CB
+color_cyan: .word 0x0000FFFF
+color_orange: .word 0x00FFA500
 .text
-
 .globl  draw_rectangle
 #######################################################
 # void draw_rectangle(x, y, width, height, color)

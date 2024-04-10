@@ -1,5 +1,6 @@
-
 .include "Pacman_player.asm"
+.include "Pacman_ghosts.asm"
+.include "Pacman_utils.asm"
 
 # Bitmap Display Configuration:
 # - Unit width in pixels: 1					     
@@ -47,8 +48,6 @@ pac_man_map_height:.word 25 # how many units the map's height contains
 pac_man_map_start_x: .word 4  # offset of the whole map'x
 pac_man_map_start_y: .word 4  # offset of the whole map'y
 
-
-
 # input 
 receiver_control_reg: .word 0xffff0000
 receiver_data_reg: .word 0xffff0004
@@ -65,14 +64,15 @@ main:
     # initial rendering
     jal draw_pac_man_map
     jal draw_player
-    # jal draw_background
+    jal draw_all_ghosts
+    jal draw_background
     
     # main loop
 Lmain_loop_begin:
     jal update_input 
     beq $v0, $zero, Lmain_loop_end
     
-    jal update_player_movement
+    #jal update_player_movement
     
     # Pause execution for 100 milliseconds to control game speed/ reduce cpu usage/ synchronize game logic
     li $v0, 32
@@ -149,31 +149,41 @@ Lhandle_input_return_one:
 # draw two rectangles
 draw_background:
     # intro 
-    subi $sp, $sp, 24
-    sw $ra, 20($sp)
+    subi $sp, $sp, 40
+    sw $ra, 36($sp)
+    sw $s1, 24($sp)
+    sw $s0, 20($sp)
     lw $t0, color_gray  
     sw $t0, 16($sp)
    
-    # draw rectangle 1
+     # draw rectangle 1
+    lw $a0, pac_man_map_start_x
+    jal tile_unit_to_pixel_pos
+    move $s0, $v0
+   
+    lw $a3, display_width_units
+    move $a2, $s0
     li $a0, 0
     li $a1, 0
-    lw $a2, pac_man_map_start_x
-    lw $a3, display_width_units
-    
     jal draw_rectangle
-	
+   
     # draw rectangle 2
     lw $a0, pac_man_map_start_x
     lw $t0, pac_man_map_width
     add $a0, $a0, $t0
-    li $a1, 0
+    jal tile_unit_to_pixel_pos
+    move $a0, $v0
+    
     lw $a3, display_width_units
+    li $a1, 0
     sub $a2, $a3, $a0
     jal draw_rectangle
 	
     # outro
-    lw $ra, 20($sp)
-    addi $sp, $sp, 24
+    lw $ra, 36($sp)
+    sw $s1, 24($sp)
+    lw $s0, 20($sp)
+    addi $sp, $sp, 40
     jr $ra
 
 #######################################################

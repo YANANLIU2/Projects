@@ -23,7 +23,6 @@ player_direction_x: .word 0
 player_direction_y: .word 0
 
 .text
-
 .globl update_player_movement
 #######################################################
 # void update_player_movement()
@@ -181,4 +180,4 @@ Ldraw_player_end:
     addi $sp, $sp, 56
     jr $ra
     
-.include "Pacman_utils.asm"
+
