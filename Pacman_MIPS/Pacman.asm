@@ -67,13 +67,21 @@ main:
     jal draw_all_ghosts
     jal draw_background
     
+    # seeding by the current time
+    li $v0, 30
+    syscall
+    move $a0, $v0
+    li $v0, 40
+    syscall
+
     # main loop
 Lmain_loop_begin:
     jal update_input 
     beq $v0, $zero, Lmain_loop_end
     
-    #jal update_player_movement
-    
+    jal update_player_movement
+    jal update_all_ghosts
+    jal draw_all_ghosts
     # Pause execution for 100 milliseconds to control game speed/ reduce cpu usage/ synchronize game logic
     li $v0, 32
     li $a0, 100

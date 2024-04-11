@@ -38,7 +38,11 @@ clyde_pos_y: .word 11
 clyde_direction_x: .word 0
 clyde_direction_y: .word 0
 
+error_msg_out_of_range: .asciiz "Erros: Random number is out of range."
+
 .text
+
+#######################################################
 .globl draw_all_ghosts
 draw_all_ghosts:
     subi $sp, $sp, 24
@@ -68,15 +72,24 @@ draw_all_ghosts:
     lw $a2, color_orange
     jal draw_ghost
     
+    # outro
     lw $ra, 20($sp)
     addi $sp, $sp, 24
+    jr $ra
     
 .globl update_all_ghosts
 #######################################################
 # void update_all_ghosts()
 # handles all ghosts' movement updates
 update_all_ghosts:
+    # intro 
+    subi $sp, $sp, 24
+    sw $ra, 20($sp)
+
     # update "Blinky (red)"
+    la $a0, blinky_pos_x
+    la $a1, blinky_pos_y
+    jal update_ghost_random
     
     # update "Pinky (pink)"
     
@@ -84,9 +97,61 @@ update_all_ghosts:
     
     # update "Clyde (orange)"
     
+    # outro
+    lw $ra, 20($sp)
+    addi $sp, $sp, 24
     jr $ra
     
-.globl draw_ghost
+#######################################################
+# vood update_ghost_random(int* x, int* y)
+# update a ghost's pos based on choosing an available movement randomly
+update_ghost_random:
+    # save args
+    move $t0, $a0
+    move $t1, $a1
+    
+    # generate a rand dir 
+    li $a1, 4
+    li $v0, 42  
+    syscall
+    
+    # load values
+    lw $t2, ($t0)
+    lw $t3, ($t1)
+    
+    beq $a0, $zero, Lmove_up
+    beq $a0, 1, Lmove_down
+    beq $a0, 2, Lmove_left
+    beq $a0, 3, Lmove_right
+    b Lerror_msg
+    
+Lmove_up:
+    subi $t3, $t3, 1
+    sw $t3, ($t1)
+    b Lupdate_ghost_end
+    
+Lmove_down:
+    addi $t3, $t3, 1
+    sw $t3, ($t1)
+    b Lupdate_ghost_end
+
+Lmove_left:
+    subi $t2, $t2, 1
+    sw $t2, ($t0)
+    b Lupdate_ghost_end
+Lmove_right:
+    addi $t2, $t2, 1
+    sw $t2, ($t0)
+    b Lupdate_ghost_end
+    
+Lerror_msg:
+    la $a0, error_msg_out_of_range
+    li $v0, 4
+    syscall
+
+Lupdate_ghost_end:
+    jr $ra
+    
 #######################################################
 # void draw_ghost(int x,int y, int color)
 draw_ghost:
