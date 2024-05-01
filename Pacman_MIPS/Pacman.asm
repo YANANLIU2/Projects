@@ -62,10 +62,10 @@ main:
     sw $ra, 20($sp)
     
     # initial rendering
-    jal draw_pac_man_map
-    jal draw_player
+    #jal draw_pac_man_map
+    #jal draw_player
     jal draw_all_ghosts
-    jal draw_background
+    #jal draw_background
     
     # seeding by the current time
     li $v0, 30
@@ -164,7 +164,7 @@ draw_background:
     lw $t0, color_gray  
     sw $t0, 16($sp)
    
-     # draw rectangle 1
+    # draw rectangle 1
     lw $a0, pac_man_map_start_x
     jal tile_unit_to_pixel_pos
     move $s0, $v0

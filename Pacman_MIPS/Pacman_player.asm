@@ -67,7 +67,7 @@ update_player_movement:
     add $t0, $t1, $t0 # addr + index
     lb $t0, ($t0)
     
-    beq $t0, 1, Lend_update_player_movement
+    bne $t0, 0, Lend_update_player_movement
 
     # save
     sw $s2, player_pos_x
@@ -90,30 +90,6 @@ Lend_update_player_movement:
     lw $s1, 20($sp)
     lw $s0, 16($sp)
     addi $sp, $sp, 48
-    jr $ra
-
-.globl check_for_teleportation
-#######################################################
-# bool check_for_teleportation(int new_x)
-# return teleported new_x if it meets teleportation requirements
-check_for_teleportation:     
-    lw $t2, pac_man_map_width
-    # check if new_x is -1.If it is => tele to width-1
-    bne $a0, -1, Lcheck_right_end 
-    subi $v0, $t2, 1
-    b Lreturn_teleportation
-    
-Lcheck_right_end:
-    # check if new_x is map_width. If it is => tele to 0
-    bne $t2, $a0, Lreturn_without_teleportation
-    li $v0, 0
-    b Lreturn_teleportation
-
-Lreturn_without_teleportation:
-    move $v0, $a0
-    jr $ra
-       
-Lreturn_teleportation:
     jr $ra
 
 .globl draw_player

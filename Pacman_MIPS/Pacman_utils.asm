@@ -95,3 +95,82 @@ draw_a_black_square:
     lw $s0, 24($sp)
     addi $sp, $sp, 32
     jr $ra
+
+.globl get_map_index
+#######################################################
+# int get_map_index(int x, int y)
+# take (x, y) and convert the pos into an index on the pac_man_map
+get_map_index:
+    # return y*map_width + x
+    lw $t0, pac_man_map_width
+    mul $a1, $a1, $t0
+    add $v0, $a1, $a0
+    jr $ra
+
+.globl get_map_symbol
+#######################################################
+# int get_map_symbol(int index) 
+# take an index as index and return map[index]
+get_map_symbol:
+    # return map[index]
+    la $t0, pac_man_map
+    add $t0, $t0, $a0
+    lb $v0, ($t0)
+    jr $ra
+    
+.globl check_for_teleportation
+#######################################################
+# bool check_for_teleportation(int new_x)
+# return teleported new_x if it meets teleportation requirements
+check_for_teleportation:     
+    lw $t2, pac_man_map_width
+    # check if new_x is -1.If it is => tele to width-1
+    bne $a0, -1, Lcheck_right_end 
+    subi $v0, $t2, 1
+    b Lreturn_teleportation
+    
+Lcheck_right_end:
+    # check if new_x is map_width. If it is => tele to 0
+    bne $t2, $a0, Lreturn_without_teleportation
+    li $v0, 0
+    b Lreturn_teleportation
+
+Lreturn_without_teleportation:
+    move $v0, $a0
+    jr $ra
+       
+Lreturn_teleportation:
+    jr $ra
+    
+.globl is_pos_walkable_on_map
+#######################################################
+# bool is_pos_walkable_on_map(int x, int y) 
+# take (x, y) and return if the position is walkable
+is_pos_walkable_on_map:
+    # intro 
+    subi $sp, $sp, 24
+    sw $ra, 20($sp)
+    
+    jal get_map_index
+    move $a0, $v0
+    jal get_map_symbol
+    bne $v0, 0, Lnot_walkable
+    li $v0, 1
+    b Lend
+Lnot_walkable:
+    move $v0, $zero
+   
+Lend:   
+    # outro 
+    lw $ra, 20($sp)
+    addi $sp, $sp, 24
+    jr $ra
+   
+    
+    
+
+
+
+
+
+

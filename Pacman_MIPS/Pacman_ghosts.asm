@@ -20,25 +20,17 @@ ghost_bitmap_length: .word 52
 
 blinky_pos_x: .word 11
 blinky_pos_y: .word 9
-blinky_direction_x: .word 0
-blinky_direction_y: .word 0
 
 pinky_pos_x: .word 11
 pinky_pos_y: .word 11
-pinky_direction_x: .word 0
-pinky_direction_y: .word 0
 
 inky_pos_x: .word 10
 inky_pos_y: .word 11
-inky_direction_x: .word 0
-inky_direction_y: .word 0
 
 clyde_pos_x: .word 12
 clyde_pos_y: .word 11
-clyde_direction_x: .word 0
-clyde_direction_y: .word 0
 
-error_msg_out_of_range: .asciiz "Erros: Random number is out of range."
+error_msg_out_of_range: .asciiz "Erros: Random number is out of range.\n"
 
 .text
 
@@ -89,13 +81,22 @@ update_all_ghosts:
     # update "Blinky (red)"
     la $a0, blinky_pos_x
     la $a1, blinky_pos_y
-    jal update_ghost_random
+    jal update_ghost_random_dir
     
     # update "Pinky (pink)"
+    la $a0, pinky_pos_x
+    la $a1, pinky_pos_y
+    jal update_ghost_random_dir
     
     # update "Inky (cyan)"
+    la $a0, inky_pos_x
+    la $a1, inky_pos_y
+    jal update_ghost_random_dir
     
     # update "Clyde (orange)"
+    la $a0, clyde_pos_x
+    la $a1, clyde_pos_y
+    jal update_ghost_random_dir
     
     # outro
     lw $ra, 20($sp)
@@ -103,45 +104,57 @@ update_all_ghosts:
     jr $ra
     
 #######################################################
-# vood update_ghost_random(int* x, int* y)
-# update a ghost's pos based on choosing an available movement randomly
-update_ghost_random:
-    # save args
-    move $t0, $a0
-    move $t1, $a1
-    
-    # generate a rand dir 
-    li $a1, 4
-    li $v0, 42  
-    syscall
-    
+# vood update_ghost_random_dir(int* x, int* y)
+# update a ghost's dir based on choosing an available direction randomly
+update_ghost_random_dir:
+    # intro 
+    subi $sp, $sp, 40
+    sw $ra, 36($sp)
+    sw $s0, 32($sp)
+    sw $s1, 28($sp)
+    sw $s2, 24($sp)
+    sw $s3, 20($sp)
+ 
     # load values
-    lw $t2, ($t0)
-    lw $t3, ($t1)
+    lw $s0, ($a0) # x
+    lw $s1, ($a1) # y
+    move $s2, $a0 # int* x
+    move $s3, $a1 # int* y
     
-    beq $a0, $zero, Lmove_up
-    beq $a0, 1, Lmove_down
-    beq $a0, 2, Lmove_left
-    beq $a0, 3, Lmove_right
+    # overwrite the previous pacman position with a black square
+    move $a0, $s0
+    move $a1, $s1 
+    jal draw_a_black_square
+    
+    # get a randdom available direction
+    move $a0, $s0
+    move $a1, $s1
+    jal get_rand_available_dir
+     
+    beq $v0, $zero, Lmove_up
+    beq $v0, 1, Lmove_down
+    beq $v0, 2, Lmove_left
+    beq $v0, 3, Lmove_right
     b Lerror_msg
     
 Lmove_up:
-    subi $t3, $t3, 1
-    sw $t3, ($t1)
+    subi $s1, $s1, 1
+    sw $s1, ($s3)
     b Lupdate_ghost_end
     
 Lmove_down:
-    addi $t3, $t3, 1
-    sw $t3, ($t1)
+    addi $s1, $s1, 1
+    sw $s1, ($s3)
     b Lupdate_ghost_end
 
 Lmove_left:
-    subi $t2, $t2, 1
-    sw $t2, ($t0)
+    subi $s0, $s0, 1
+    sw $s0, ($s2)
     b Lupdate_ghost_end
+    
 Lmove_right:
-    addi $t2, $t2, 1
-    sw $t2, ($t0)
+    addi $s0, $s0, 1
+    sw $s0, ($s2)
     b Lupdate_ghost_end
     
 Lerror_msg:
@@ -150,6 +163,111 @@ Lerror_msg:
     syscall
 
 Lupdate_ghost_end:
+    lw $ra, 36($sp)
+    lw $s0, 32($sp)
+    lw $s1, 28($sp)
+    lw $s2, 24($sp)
+    lw $s3, 20($sp)
+    addi $sp, $sp, 40
+    jr $ra
+
+#######################################################
+# int get_rand_available_dir(int x, int y)
+# find all possible directions for the position (x,y)
+# choose a random one from the available ones
+# return: 0 (up), 1 (down), 2 (left), 3 (right)
+# ideally I want to use heap memory here, but I used heap's address for display. So I use stack for my local array. 
+get_rand_available_dir:
+    # intro 
+    subi $sp, $sp, 40
+    sw $ra, 36($sp)
+    sw $zero, 32($sp) # size of the available direction array
+    sw $a0, 40($sp) # previous stack frame
+    sw $a1, 44($sp)
+    
+ # Lcalc_up:
+    subi $a1, $a1, 1
+    jal is_pos_walkable_on_map 
+    beq $v0, 0, Lcalc_down # 0 means not walkable
+    
+    li $t0, 1
+    sw $t0, 32($sp) # update array size
+    sw $zero, 28($sp) # save up(0) into array
+    
+ Lcalc_down:
+    lw $a0, 40($sp)
+    lw $a1, 44($sp)
+    addi $a1, $a1, 1
+    jal is_pos_walkable_on_map
+    beq $v0, 0, Lcalc_left
+    
+    lw $t0, 32($sp)
+    addi $t0, $t0, 1
+    sw $t0, 32($sp) # update array size
+    
+    sll $t0, $t0, 2
+    la $t1,  32($sp)
+    sub $t0, $t1, $t0 # calc addr
+    
+    li $t1, 1
+    sw $t1, ($t0) # save down(1) into array
+
+Lcalc_left:
+    lw $a0, 40($sp)
+    lw $a1, 44($sp)
+    subi $a0, $a0, 1
+    jal is_pos_walkable_on_map 
+    beq $v0, 0, Lcalc_right
+    
+    lw $t0, 32($sp)
+    addi $t0, $t0, 1
+    sw $t0, 32($sp) # update array size
+    
+    sll $t0, $t0, 2
+    la $t1,  32($sp)
+    sub $t0, $t1, $t0 # calc addr
+    
+    li $t1, 2
+    sw $t1, ($t0) # save left(2) into array
+
+Lcalc_right:
+    lw $a0, 40($sp)
+    lw $a1, 44($sp)
+    addi $a0, $a0, 1
+    jal is_pos_walkable_on_map 
+    beq $v0, 0, Lcalc_rand
+    
+    lw $t0, 32($sp)
+    addi $t0, $t0, 1
+    sw $t0, 32($sp) # update array size
+    
+    sll $t2, $t0, 2
+    la $t1,  32($sp)
+    sub $t2, $t1, $t2 # calc addr
+    
+    li $t1, 3
+    sw $t1, ($t2) # save right(3) into array
+    
+Lcalc_rand:
+    li $v0, 0 # default return value
+    lw $t0, 32($sp)
+    ble $t0, $zero, Lcalc_exit
+    
+    # generate a rand dir 
+    move $a1, $t0
+    li $v0, 42  
+    syscall
+    
+    # get return value from array
+    sll $a0, $a0, 2
+    la $t1,  28($sp)  # array[0]
+    sub $a0, $t1, $a0 # calc addr
+    lw $v0, ($a0)
+
+Lcalc_exit:
+    # outro
+    lw $ra, 36($sp) 
+    addi $sp, $sp, 40
     jr $ra
     
 #######################################################
