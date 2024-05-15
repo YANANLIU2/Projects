@@ -18,8 +18,8 @@ ghost_bitmap: .byte # mannually converted a pac-man player pixel art in a format
 
 ghost_bitmap_length: .word 52
 
-blinky_pos_x: .word 11
-blinky_pos_y: .word 9
+blinky_pos_x: .word 15
+blinky_pos_y: .word 10
 
 pinky_pos_x: .word 11
 pinky_pos_y: .word 11
@@ -31,11 +31,13 @@ clyde_pos_x: .word 12
 clyde_pos_y: .word 11
 
 error_msg_out_of_range: .asciiz "Erros: Random number is out of range.\n"
-
+.align 2
+ghost_available_moves: .space 32 # Position array[4]. Position includes pos_x and pos_y
+ghost_available_moves_num: .word 0
 .text
 
-#######################################################
 .globl draw_all_ghosts
+#######################################################
 draw_all_ghosts:
     subi $sp, $sp, 24
     sw $ra, 20($sp)
@@ -81,22 +83,22 @@ update_all_ghosts:
     # update "Blinky (red)"
     la $a0, blinky_pos_x
     la $a1, blinky_pos_y
-    jal update_ghost_random_dir
+    jal update_ghost_move_towards_player
     
     # update "Pinky (pink)"
     la $a0, pinky_pos_x
     la $a1, pinky_pos_y
-    jal update_ghost_random_dir
+    jal update_ghost_move_towards_player
     
     # update "Inky (cyan)"
     la $a0, inky_pos_x
     la $a1, inky_pos_y
-    jal update_ghost_random_dir
+    jal update_ghost_move_towards_player
     
     # update "Clyde (orange)"
     la $a0, clyde_pos_x
     la $a1, clyde_pos_y
-    jal update_ghost_random_dir
+    jal update_ghost_move_towards_player
     
     # outro
     lw $ra, 20($sp)
@@ -104,170 +106,138 @@ update_all_ghosts:
     jr $ra
     
 #######################################################
-# vood update_ghost_random_dir(int* x, int* y)
-# update a ghost's dir based on choosing an available direction randomly
-update_ghost_random_dir:
+# int get_move_towards_player()
+# return min distance index represents the best move among ghost_available_moves
+#
+# I also want to share an interesting finding. When I was trying to implement AI chase logic, 
+# I initially wanted to use the Manhattan distance (abs(x) + abs(y)), but I realized that I 
+# would need to write a branch for it. So instead, I used x^2 + y^2.
+get_move_towards_player:
     # intro 
-    subi $sp, $sp, 40
-    sw $ra, 36($sp)
-    sw $s0, 32($sp)
-    sw $s1, 28($sp)
-    sw $s2, 24($sp)
-    sw $s3, 20($sp)
- 
-    # load values
-    lw $s0, ($a0) # x
-    lw $s1, ($a1) # y
-    move $s2, $a0 # int* x
-    move $s3, $a1 # int* y
+    subi $sp, $sp, 32
+    sw $ra, 28($sp)
+    sw $s0, 24($sp)
+    sw $s1, 20($sp)
+    lw $s0, player_pos_x
+    lw $s1, player_pos_y 
     
-    # overwrite the previous pacman position with a black square
-    move $a0, $s0
-    move $a1, $s1 
-    jal draw_a_black_square
+    # choose the best move depends on an estimated distance from a move towards the player's pos
+    li $v0, 0 # min distance index
+    la $t0, ghost_available_moves
+    lw $t1, ghost_available_moves_num
+    lw $t2, pac_man_map_max_distance # min distance
+    li $t3, 0 # cur i
     
-    # get a randdom available direction
-    move $a0, $s0
-    move $a1, $s1
-    jal get_rand_available_dir
-     
-    beq $v0, $zero, Lmove_up
-    beq $v0, 1, Lmove_down
-    beq $v0, 2, Lmove_left
-    beq $v0, 3, Lmove_right
-    b Lerror_msg
+loop_closest_move_begin:
+    bge $t3, $t1, loop_closest_move_end
     
-Lmove_up:
-    subi $s1, $s1, 1
-    sw $s1, ($s3)
-    b Lupdate_ghost_end
+    # (move_x - player_x)^2
+    lw $t4, ($t0)
+    sub $t4, $t4, $s0
+    mul $t4, $t4, $t4
+    addi $t0, $t0, 4
+      
+    # (move_y - player_y)^2
+    lw $t5, ($t0)
+    sub $t5, $t5, $s1
+    mul $t5, $t5, $t5
+    addi $t0, $t0, 4
     
-Lmove_down:
-    addi $s1, $s1, 1
-    sw $s1, ($s3)
-    b Lupdate_ghost_end
-
-Lmove_left:
-    subi $s0, $s0, 1
-    sw $s0, ($s2)
-    b Lupdate_ghost_end
+    # add
+    add $t6, $t4, $t5
     
-Lmove_right:
-    addi $s0, $s0, 1
-    sw $s0, ($s2)
-    b Lupdate_ghost_end
+    # compare
+    blt $t6, $t2, loop_closest_move_update_min
     
-Lerror_msg:
-    la $a0, error_msg_out_of_range
-    li $v0, 4
-    syscall
-
-Lupdate_ghost_end:
-    lw $ra, 36($sp)
-    lw $s0, 32($sp)
-    lw $s1, 28($sp)
-    lw $s2, 24($sp)
-    lw $s3, 20($sp)
-    addi $sp, $sp, 40
-    jr $ra
-
-#######################################################
-# int get_rand_available_dir(int x, int y)
-# find all possible directions for the position (x,y)
-# choose a random one from the available ones
-# return: 0 (up), 1 (down), 2 (left), 3 (right)
-# ideally I want to use heap memory here, but I used heap's address for display. So I use stack for my local array. 
-get_rand_available_dir:
-    # intro 
-    subi $sp, $sp, 40
-    sw $ra, 36($sp)
-    sw $zero, 32($sp) # size of the available direction array
-    sw $a0, 40($sp) # previous stack frame
-    sw $a1, 44($sp)
+loop_closest_move_increment:
+    addi $t3, $t3, 1 
+    b loop_closest_move_begin
     
- # Lcalc_up:
-    subi $a1, $a1, 1
-    jal is_pos_walkable_on_map 
-    beq $v0, 0, Lcalc_down # 0 means not walkable
-    
-    li $t0, 1
-    sw $t0, 32($sp) # update array size
-    sw $zero, 28($sp) # save up(0) into array
-    
- Lcalc_down:
-    lw $a0, 40($sp)
-    lw $a1, 44($sp)
-    addi $a1, $a1, 1
-    jal is_pos_walkable_on_map
-    beq $v0, 0, Lcalc_left
-    
-    lw $t0, 32($sp)
-    addi $t0, $t0, 1
-    sw $t0, 32($sp) # update array size
-    
-    sll $t0, $t0, 2
-    la $t1,  32($sp)
-    sub $t0, $t1, $t0 # calc addr
-    
-    li $t1, 1
-    sw $t1, ($t0) # save down(1) into array
-
-Lcalc_left:
-    lw $a0, 40($sp)
-    lw $a1, 44($sp)
-    subi $a0, $a0, 1
-    jal is_pos_walkable_on_map 
-    beq $v0, 0, Lcalc_right
-    
-    lw $t0, 32($sp)
-    addi $t0, $t0, 1
-    sw $t0, 32($sp) # update array size
-    
-    sll $t0, $t0, 2
-    la $t1,  32($sp)
-    sub $t0, $t1, $t0 # calc addr
-    
-    li $t1, 2
-    sw $t1, ($t0) # save left(2) into array
-
-Lcalc_right:
-    lw $a0, 40($sp)
-    lw $a1, 44($sp)
-    addi $a0, $a0, 1
-    jal is_pos_walkable_on_map 
-    beq $v0, 0, Lcalc_rand
-    
-    lw $t0, 32($sp)
-    addi $t0, $t0, 1
-    sw $t0, 32($sp) # update array size
-    
-    sll $t2, $t0, 2
-    la $t1,  32($sp)
-    sub $t2, $t1, $t2 # calc addr
-    
-    li $t1, 3
-    sw $t1, ($t2) # save right(3) into array
-    
-Lcalc_rand:
-    li $v0, 0 # default return value
-    lw $t0, 32($sp)
-    ble $t0, $zero, Lcalc_exit
-    
-    # generate a rand dir 
-    move $a1, $t0
-    li $v0, 42  
-    syscall
-    
-    # get return value from array
-    sll $a0, $a0, 2
-    la $t1,  28($sp)  # array[0]
-    sub $a0, $t1, $a0 # calc addr
-    lw $v0, ($a0)
-
-Lcalc_exit:
+loop_closest_move_end:
     # outro
-    lw $ra, 36($sp) 
-    addi $sp, $sp, 40
+    lw $s1, 20($sp)
+    lw $s0, 24($sp)
+    lw $ra, 28($sp)
+    addi $sp, $sp, 32
+    jr $ra
+    
+loop_closest_move_update_min:
+    move $t2, $t6
+    move $v0 ,$t3
+    b loop_closest_move_increment
+   
+#######################################################
+# void check_save_dir(int x, int y)
+# check if the direction is possible for a ghost to move, save the pos if it's available
+check_save_dir:
+    # intro 
+    subi $sp, $sp, 32
+    sw $ra, 28($sp) 
+    sw $s0, 24($sp) # x
+    sw $s1, 20($sp) # y
+    move $s0, $a0
+    move $s1, $a1
+
+    # check pos
+    jal is_pos_walkable_on_map
+    beq $v0, $zero, check_save_dir_end
+    
+    # save pos
+    lw $t1, ghost_available_moves_num
+    sll $t0, $t1, 3 # one move contains 8 bytes data: 4 for x, 4 for y
+    la $t2, ghost_available_moves
+    add $t0, $t0, $t2
+    
+    sw $s0, ($t0)
+    sw $s1, 4($t0)
+    addi $t1, $t1, 1
+    sw $t1, ghost_available_moves_num
+    
+check_save_dir_end:
+    # outro
+    lw $s1, 20($sp)
+    lw $s0, 24($sp)
+    lw $ra, 28($sp)
+    addi $sp, $sp, 32
+    jr $ra
+    
+#######################################################
+# void calc_available_dir(int x, int y)
+# find all possible directions for the position (x,y) and save them into ghost_available_moves_addr
+calc_available_dir:
+    # intro 
+    subi $sp, $sp, 32
+    sw $ra, 28($sp) 
+    sw $s0, 24($sp) # x
+    sw $s1, 20($sp) # y
+    move $s0, $a0
+    move $s1, $a1
+    
+    # up
+    subi $a1, $a1, 1
+    jal check_save_dir
+    
+    # down
+    move $a0, $s0
+    addi $a1, $s1, 1
+    jal check_save_dir
+    
+    # left
+    subi $a0, $s0, 1
+    move $a1, $s1
+    jal check_save_dir
+    
+    # right
+    addi $a0, $s0, 1
+    move $a1, $s1
+    jal check_save_dir
+  
+   
+    # outro
+    lw $s1, 20($sp)
+    lw $s0, 24($sp)
+    lw $ra, 28($sp)
+    addi $sp, $sp, 32
     jr $ra
     
 #######################################################
@@ -327,4 +297,55 @@ Ldraw_ghost_end:
     lw $s0, 20($sp)
     addi $sp, $sp, 48
     jr $ra
+    
+#######################################################
+# void update_ghost_move_towards_player(int* x, int* y)
+# update a ghost's position based on choosing a best move that will minimize the distance between the player's current position and the ghost's next position
+update_ghost_move_towards_player:
+    # intro 
+    subi $sp, $sp, 32
+    sw $ra, 28($sp)
+    sw $s0, 24($sp)
+    sw $s1, 20($sp)
+    sw $s2, 16($sp)
+    move  $s0, $a0
+    move  $s1, $a1
+    
+    # calc availble
+    lw $a0, ($a0)
+    lw $a1, ($a1)    
+    jal calc_available_dir
+     
+    # calc the best move
+    jal get_move_towards_player
+    move $s2, $v0
+    
+    # draw a black square at the previous location
+    lw $a0, ($s0)
+    lw $a1, ($s1)
+    jal draw_a_black_square
+    
+    # redeem the result
+    la $t0, ghost_available_moves
+    sll $s2, $s2, 3 # # one move contains 8 bytes data: 4 for x, 4 for y
+    add $s2, $s2, $t0
+    lw $t0, ($s2)
+    addi $s2, $s2, 4
+    lw $t1, ($s2)
+   
+    # save 
+    sw $t0, ($s0)
+    sw $t1, ($s1)
+    
+    # reset
+    sw $zero, ghost_available_moves_num
+
+    # outro
+    lw $s2, 16($sp)
+    lw $s1, 20($sp)
+    lw $s0, 24($sp)
+    lw $ra, 28($sp)
+    addi $sp, $sp, 32
+    jr $ra
+    
         

@@ -1,3 +1,4 @@
+
 .data
 # Base address for the bitmap display
 base_address: .word 0x10040000
@@ -12,6 +13,7 @@ color_red: .word 0x00FF0000
 color_pink: .word 0x00FFC0CB
 color_cyan: .word 0x0000FFFF
 color_orange: .word 0x00FFA500
+
 .text
 .globl  draw_rectangle
 #######################################################
@@ -165,10 +167,6 @@ Lend:
     lw $ra, 20($sp)
     addi $sp, $sp, 24
     jr $ra
-   
-    
-    
-
 
 
 

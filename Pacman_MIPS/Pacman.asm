@@ -47,6 +47,7 @@ pac_man_map_width: .word 23 # how many units the map's width contains
 pac_man_map_height:.word 25 # how many units the map's height contains
 pac_man_map_start_x: .word 4  # offset of the whole map'x
 pac_man_map_start_y: .word 4  # offset of the whole map'y
+pac_man_map_max_distance: .word 1060 # (23-1)^2 + (25-1)^2
 
 # input 
 receiver_control_reg: .word 0xffff0000
@@ -62,8 +63,8 @@ main:
     sw $ra, 20($sp)
     
     # initial rendering
-    #jal draw_pac_man_map
-    #jal draw_player
+    jal draw_pac_man_map
+    jal draw_player
     jal draw_all_ghosts
     #jal draw_background
     
@@ -84,7 +85,7 @@ Lmain_loop_begin:
     jal draw_all_ghosts
     # Pause execution for 100 milliseconds to control game speed/ reduce cpu usage/ synchronize game logic
     li $v0, 32
-    li $a0, 100
+    li $a0, 150
     syscall
     
     b Lmain_loop_begin
@@ -274,6 +275,9 @@ Lloop_end_y:
     lw $s0, 20($sp)
     addi $sp, $sp, 56
     jr $ra
+    
+    
 
+	
 
     
